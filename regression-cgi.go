@@ -8,21 +8,17 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"time"
 )
-
-var wg sync.WaitGroup
 
 type Data struct {
 	X, Y             []float64 // Slices with X and Y values as data for the scatter plot.
 	Intercept, Slope float64   // User guess for intercept and slope of the line graph.
-	rssOLS, rssGuess float64   // Residual sum of squares of OLS model and user guess.
+	RssOLS, RssGuess float64   // Residual sum of squares of OLS model and user guess.
 	ImagePath        string    // Path to plot image (PNG format).
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	wg.Add(1)
 	go filepath.Walk("images", RemoveOldFiles)
 	d := &Data{
 		X: []float64{5, 3, 6, 3, 5, 2, 0, 6, 8, 10},
@@ -34,15 +30,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	d.Intercept, d.Slope = floatMap[keys[0]], floatMap[keys[1]]
 
 	// Run Regression, draw plot and serve HTML from template.
-	d.rssOLS, d.rssGuess = Regression(d)
+	d.RssOLS, d.RssGuess = Regression(d)
 	d.ImagePath = DrawPlot(d)
 
-	t, err := template.ParseFiles("templates/input.html")
+	t, err := template.ParseFiles(filepath.Join("templates", "input.html"))
 	if err != nil {
 		log.Println(err)
 	}
 	t.Execute(w, d)
-	wg.Wait()
 }
 
 func main() {
