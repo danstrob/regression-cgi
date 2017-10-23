@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Interactive bivariate regression</title>
+    <style>
+      img {
+      float: right;
+      margin:0 250px 0 0;
+      }
+
+      <!-- table { -->
+      <!-- border-collapse: collapse; -->
+      <!-- width: 100%; -->
+      <!-- } -->
+
+      td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+      }
+      
+      tr:nth-child(even) {
+      background-color: #dddddd;
+      }
+    </style>
+
+  </head>
+  <body>
+    <img src="images/points.png" alt="test" width="450" height="450">
+    <form name="reg_form" action="regression-cgi" method="get" accept-charset="utf-8">
+
+    <!-- Input form -->
+    <form style="float:left;">
+      <table>
+	<tr>
+	  <th><label for="usermail">Intercept</label>
+	    <input type="number" name="intercept" min="-100" step=".01" max="100" 
+		   placeholder="0.00" value="{{.Data.Intercept}}" required></th>
+	  <th><label for="password">Slope</label>
+	    <input type="number" name="slope" min="-100" step=".01" max="100" 
+		   placeholder="0.00" value="{{.Data.Slope}}" required></th>
+	  <th><input type="submit" value="Run"></th>
+	</tr>
+      </table>
+    </form>
+
+      <!-- Data -->
+    <table>
+      <tr>
+	<th>X</th>
+	<th>Y</th>
+	<th>RSS</th>
+      </tr>
+      <tr>
+	<td>5</td>
+	<td>3</td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>3</td>
+	<td>5</td>
+	<td></td>
+      </tr>
+    </table>
+
+  </body>
+</html>
