@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 	"log"
+	"math"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -14,9 +15,9 @@ import (
 	"gonum.org/v1/plot/vg/draw"
 )
 
-// Regression takes in a Data struct, runs an OLS regression and
-// returns the residual sum of squares based on the user's guesses for the
-// intercept and slope.
+// Regression takes in a Data struct, runs a bivariate OLS regression and
+// returns the residual sum of squares for the OLS model as well as for the predicted values
+// based on the user's guesses for the intercept and slope.
 func Regression(d *Data) (float64, float64) {
 	a, b := stat.LinearRegression(d.X, d.Y, nil, false)
 	rssOLS := ResidSumOfSquares(d.X, d.Y, a, b)
@@ -28,7 +29,6 @@ func Regression(d *Data) (float64, float64) {
 // of a bivariate scatter plot with a line graph based on the user's guesses
 // for the intercept and slope. It returns the file path of the image.
 func DrawPlot(d *Data) string {
-	// generate plotter data
 	scatterData := plotterData(d.X, d.Y)
 	lineData := lineData(d.Intercept, d.Slope, d.X)
 
@@ -76,30 +76,6 @@ func DrawPlot(d *Data) string {
 	return imagePath
 }
 
-func ResidSumOfSquares(x, y []float64, alpha, beta float64) (rss float64) {
-	if len(x) != len(y) {
-		log.Fatalln("Length mismatch of slices X and Y.")
-	}
-	for i, xval := range x {
-		resid := (alpha + beta*xval) - y[i]
-		rss += resid * resid
-	}
-	return
-}
-
-func makeFilePath() string {
-	return filepath.Join("images", strconv.FormatInt(time.Now().UnixNano(), 10)+".png")
-}
-
-func plotterData(x, y []float64) plotter.XYs {
-	pts := make(plotter.XYs, len(x))
-	for i, xvals := range x {
-		pts[i].X = xvals
-		pts[i].Y = y[i]
-	}
-	return pts
-}
-
 // lineData returns the plotter data for a line plot based on user guesses
 // for the intercept and slope, using the range of the x values of the scatter plot data.
 func lineData(intercept, slope float64, xdata []float64) plotter.XYs {
@@ -111,6 +87,10 @@ func lineData(intercept, slope float64, xdata []float64) plotter.XYs {
 		y = append(y, intercept+slope*xval)
 	}
 	return plotterData(x, y)
+}
+
+func makeFilePath() string {
+	return filepath.Join("images", strconv.FormatInt(time.Now().UnixNano(), 10)+".png")
 }
 
 // MinMax returns the minmum and maximum values of a slice of floats.
@@ -125,4 +105,28 @@ func MinMax(slice []float64) (min, max float64) {
 		}
 	}
 	return min, max
+}
+
+func plotterData(x, y []float64) plotter.XYs {
+	pts := make(plotter.XYs, len(x))
+	for i, xvals := range x {
+		pts[i].X = xvals
+		pts[i].Y = y[i]
+	}
+	return pts
+}
+
+func ResidSumOfSquares(x, y []float64, alpha, beta float64) (rss float64) {
+	if len(x) != len(y) {
+		log.Fatalln("Length mismatch of slices X and Y.")
+	}
+	for i, xval := range x {
+		resid := (alpha + beta*xval) - y[i]
+		rss += resid * resid
+	}
+	return round(rss)
+}
+
+func round(x float64) float64 {
+	return math.Floor((x*100)+0.5) / 100
 }

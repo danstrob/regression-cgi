@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -8,18 +9,26 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 )
 
+var wg sync.WaitGroup
+
 type Data struct {
 	X, Y             []float64 // Slices with X and Y values as data for the scatter plot.
-	Intercept, Slope float64   // User guess for intercept and slope of the line graph.
+	Intercept, Slope float64   // User guess for the intercept and slope of the line graph.
 	RssOLS, RssGuess float64   // Residual sum of squares of OLS model and user guess.
 	ImagePath        string    // Path to plot image (PNG format).
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	go filepath.Walk("images", RemoveOldFiles)
+	wg.Add(1)
+	go func() {
+		filepath.Walk("images", RemoveOldFiles)
+		wg.Done()
+	}()
+
 	d := &Data{
 		X: []float64{5, 3, 6, 3, 5, 2, 0, 6, 8, 10},
 		Y: []float64{3, 5, 3, 7, 0, 8, 6, 0, 0, 0}}
@@ -38,6 +47,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	t.Execute(w, d)
+	wg.Wait()
 }
 
 func main() {
@@ -74,13 +84,13 @@ func inputToFloat(r *http.Request, keys []string) map[string]float64 {
 	return keyMap
 }
 
-// RemoveOldFiles is a WalkFunc which removes all files in root dir older than 30 seconds.
+// RemoveOldFiles is a WalkFunc which removes all files in root dir older than 60 seconds.
 func RemoveOldFiles(path string, info os.FileInfo, err error) error {
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 	if !info.IsDir() {
-		if time.Since(info.ModTime()).Seconds() > 30 {
+		if time.Since(info.ModTime()).Seconds() > 60 {
 			err := os.Remove(path)
 			if err != nil {
 				log.Print(err)
