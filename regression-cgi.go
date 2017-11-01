@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -30,13 +29,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	d := &Data{
-		X: []float64{5, 3, 6, 3, 5, 2, 0, 6, 8, 10},
-		Y: []float64{3, 5, 3, 7, 0, 8, 6, 0, 0, 0}}
+		X: []float64{5, 3, 6, 3, 8, 2, 0, 6, 8, 10},
+		Y: []float64{3, 5, 3, 7, 4, 8, 6, 0, 0, 0}}
 
 	// Convert HTML input from string to floats.
-	keys := []string{"intercept", "slope"}
-	floatMap := inputToFloat(r, keys)
-	d.Intercept, d.Slope = floatMap[keys[0]], floatMap[keys[1]]
+	floatSlice := inputToFloat(r, "intercept", "slope")
+	d.Intercept, d.Slope = floatSlice[0], floatSlice[1]
 
 	// Run Regression, draw plot and serve HTML from template.
 	d.RssOLS, d.RssGuess = Regression(d)
@@ -57,31 +55,36 @@ func main() {
 }
 
 // inputToFloat takes in a pointer to an http.Request and
-// a slice of strings with keys to search for in the query.
-// It returns a map of the keys (string) to converted floats.
-func inputToFloat(r *http.Request, keys []string) map[string]float64 {
+// strings with keys to search for in the HTML user input.
+// It returns a slice with the string values converted to floats.
+func inputToFloat(r *http.Request, keys ...string) []float64 {
 	err := r.ParseForm()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	keyMap := make(map[string]float64)
+	var floats []float64
 	for _, k := range keys {
 		str := r.FormValue(k)
 		if str != "" {
-			keyMap[k], err = strconv.ParseFloat(str, 64)
+			f, err := strconv.ParseFloat(str, 64)
 
 			switch {
 			case err != nil:
 				log.Fatal(err)
-			case keyMap[k] > 50:
+			case f > 50:
 				log.Fatalf("Invalid user input: Value for %s too large.", k)
-			case keyMap[k] < -50:
+			case f < -50:
 				log.Fatalf("Invalid user input: Value for %s too small.", k)
+			default:
+				floats = append(floats, f)
 			}
 		}
+		if str == "" {
+			floats = append(floats, 0)
+		}
 	}
-	return keyMap
+	return floats
 }
 
 // RemoveOldFiles is a WalkFunc which removes all files in root dir older than 60 seconds.
