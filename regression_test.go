@@ -12,16 +12,6 @@ var testData = &Data{
 		15.52848773, -9.81706237, 1.64974166, -5.76083789,
 		0.20345582, 10.57435605}}
 
-func TestMinMax(t *testing.T) {
-	min, max := MinMax(testData.X)
-	if min != -8.59303456 {
-		t.Error(`MinMax(testData.X) failed: min != -8.59303456`)
-	}
-	if max != 12.27539741 {
-		t.Error(`MinMax(testData.X) failed: max != 12.27539741`)
-	}
-}
-
 func TestRegression(t *testing.T) {
 	testData.Intercept, testData.Slope = 4, -0.25
 	testData.RssOLS, testData.RssGuess = Regression(testData)

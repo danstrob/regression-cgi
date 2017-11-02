@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/stat"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
@@ -79,7 +80,8 @@ func DrawPlot(d *Data) string {
 // lineData returns the plotter data for a line plot based on user guesses
 // for the intercept and slope, using the range of the x values of the scatter plot data.
 func lineData(intercept, slope float64, xdata []float64) plotter.XYs {
-	min, max := MinMax(xdata)
+	min := floats.Min(xdata)
+	max := floats.Max(xdata)
 	x := []float64{min}
 	y := []float64{intercept + slope*min}
 	for xval := min; xval <= max; xval++ {
@@ -91,20 +93,6 @@ func lineData(intercept, slope float64, xdata []float64) plotter.XYs {
 
 func makeFilePath() string {
 	return filepath.Join("images", strconv.FormatInt(time.Now().UnixNano(), 10)+".png")
-}
-
-// MinMax returns the minmum and maximum values of a slice of floats.
-// NOTE: This does not care about floating-point precision as it is not important for its use case!
-func MinMax(slice []float64) (min, max float64) {
-	for _, v := range slice {
-		if max < v {
-			max = v
-		}
-		if min > v {
-			min = v
-		}
-	}
-	return min, max
 }
 
 func plotterData(x, y []float64) plotter.XYs {
