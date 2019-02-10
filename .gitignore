@@ -22,6 +22,5 @@ _testmain.go
 *.exe
 *.test
 *.prof
-*.png
 regression-cgi
 deploy.sh
